@@ -4,150 +4,39 @@
 
 #include <iostream>
 #include <set>
+#include <vector>
+#include <algorithm>
+#include "coin.h"
+#include "Purse.h"
 using namespace std;
 
-
-//Struct to represent the coins 
-struct coin{
-	string coinType;
-	double coinValue; 
-
-	coin(string name, double value)
-	{
-		coinType = name;
-		coinValue = value;
-	}
-
-	bool operator<(const coin& other) const {
-		return coinValue < other.coinValue;
-	}
-};
-
-//Class the represents a purse
-class purse {
-public:
-	//Method to add a multiset of coins to the purse 
-	void add(const std::multiset<coin>& newCoins) {
-		coinMultiset.insert(newCoins.begin(), newCoins.end());
-	}
-
-	//Method to get the total ammount of money in a purse 
-	double totalMoney() {
-		double purseMoney = 0;
-
-		multiset<coin>::iterator pos;
-		for (pos = coinMultiset.begin(); pos != coinMultiset.end(); pos++) {
-			purseMoney += pos->coinValue;
-		}
-
-		return purseMoney;
-	}
-
-	//Method to complete a payment 
-	void pay(double paymentAmmount) {
-		
-		//Make sure the payment ammount in not more than the total
-		if (paymentAmmount > totalMoney()) {
-			cout << "Warning: Payment is greater than the money in the purse" << endl;
-		}
-
-		//Pay with quarters 
-		while (paymentAmmount >= .25 && countQuarters() > 0) {
-			multiset<coin>::iterator pos = coinMultiset.find(coin("Quarter", .25));
-			if (pos != coinMultiset.end()) {
-				coinMultiset.erase(pos);
-				paymentAmmount -= .25;
-				cout << "Quarter removed" << endl;
-			}
-		}
-		
-		//Pay with dimes 
-		while (paymentAmmount >= .10 && countDimes() > 0) {
-			multiset<coin>::iterator pos = coinMultiset.find(coin("Dimes", .10));
-			if (pos != coinMultiset.end()) {
-				coinMultiset.erase(pos);
-				paymentAmmount -= .10;
-				cout << "Dime removed" << endl;
-			}
-		}
-		
-		//Pay with nickles 
-		while (paymentAmmount >= .05 && countNickels() > 0) {
-			multiset<coin>::iterator pos = coinMultiset.find(coin("Nickel", .05));
-			if (pos != coinMultiset.end()) {
-				coinMultiset.erase(pos);
-				paymentAmmount -= .05;
-				cout << "Nickle removed" << endl;
-			}
-		}
-
-		//Pay with pennies
-		while (paymentAmmount > 0 && countPennies() > 0) {
-			multiset<coin>::iterator pos = coinMultiset.find(coin("Penny", .01));
-			if (pos != coinMultiset.end()) {
-				coinMultiset.erase(pos);
-				paymentAmmount -= .01;
-				cout << "Penny removed" << endl;
-			}
-		}
-
-		if (paymentAmmount == 0) cout << "You have payed with exact change" << endl;
-		if (paymentAmmount != 0) cout << "No exact change" << endl;
-	}
-
-	//Method to count pennies
-	int countPennies() {
-		int pennyCount = 0;
-
-		multiset<coin>::iterator pos;
-		for (pos = coinMultiset.begin(); pos != coinMultiset.end(); pos++) {
-			if (pos->coinType == "Penny") pennyCount += 1;
-		}
-
-		return pennyCount; 
-	}
-
-	//Method to count nickles
-	int countNickels() {
-		int nickelCount = 0;
-
-		multiset<coin>::iterator pos;
-		for (pos = coinMultiset.begin(); pos != coinMultiset.end(); pos++) {
-			if (pos->coinType == "Nickel") 	nickelCount += 1;
-		}
-
-		return nickelCount;
-	}
-
-	//Method to count nickles
-	int countDimes() {
-		int dimeCount = 0;
-
-		multiset<coin>::iterator pos;
-		for (pos = coinMultiset.begin(); pos != coinMultiset.end(); pos++) {
-			if (pos->coinType == "Dime") dimeCount += 1;
-		}
-
-		return dimeCount;
-	}
-
-	//Method to count nickles
-	int countQuarters() {
-		int quarterCount = 0;
-
-		multiset<coin>::iterator pos;
-		for (pos = coinMultiset.begin(); pos != coinMultiset.end(); pos++) {
-			if (pos->coinType == "Quarter") quarterCount += 1;
-		}
-
-		return quarterCount;
-	}
+int compareTotalMoney(const void* a, const void* b) {
+	const purse* purseA = *(const purse**)a;	//derefference the void* and set it so a purse*
+	const purse* purseB = *(const purse**)b;    //derefference the void* and set it so a purse*
 	
-private:
-	multiset<coin> coinMultiset;
-};
+	//compare the totalMoney in each purse 
+	if (purseA->totalMoney() < purseB->totalMoney()) return -1;
+	if (purseA->totalMoney() > purseB->totalMoney()) return 1;
+	return 0;
+}
 
+int compareTotalCoins(const void* a, const void* b) {
+	const purse* purseA = *(const purse**)a;	//derefference the void* and set it so a purse*
+	const purse* purseB = *(const purse**)b;    //derefference the void* and set it so a purse*
 
+	//calculate the total number of coins in each purse 
+	int aTotal = 0; 
+	int bTotal = 0;
+
+	aTotal = purseA->countQuarters() + purseA->countDimes() + purseA->countNickels() + purseA->countPennies();
+	bTotal = purseB->countQuarters() + purseB->countDimes() + purseB->countNickels() + purseB->countPennies();
+
+	//Compare the total number of coins in each purse 
+	if (aTotal < bTotal) return -1;
+	if (aTotal > bTotal) return 1;
+	return 0;
+
+}
 int main() {
 	//initalize values for coin 
 	coin penny("Penny", .01);
@@ -221,6 +110,7 @@ int main() {
 	purse Purse6;
 	Purse6.add(coinList6);
 
+	//Problem 1 Part B
 	//create the array the purses will be stored in 
 	purse* purseArray[] = { &Purse1, &Purse2, &Purse3, &Purse4, &Purse5, &Purse6 };
 	
@@ -230,7 +120,40 @@ int main() {
 		cout << "The total ammount of change in Purse" << i + 1 << " is : $" << purseArray[i]->totalMoney() << endl;
 	}
 
-	cout << "made it to the end with changes what about with more changes  " << endl;
 
-	cout << "This is another attampt to make sure this works ";
+	//Qsort the total money in a purse from smallest to largest 
+	int size = sizeof(purseArray) / sizeof(purseArray[0]);
+	qsort(purseArray, size, sizeof(purse*), compareTotalMoney);
+	for (int i = 0; i < 6; i++) {
+		cout << "The total ammount in Purse" << i + 1 << " is : $" << purseArray[i]->totalMoney() << endl;
+	}
+
+	//Qsort to compar the total number of coins in each purse from smallest to largest
+	qsort(purseArray, size, sizeof(purse*), compareTotalCoins);
+	for (int i = 0; i < 6; i++) {
+		cout << "The total ammount in Purse" << i + 1 << " is : $" << purseArray[i]->totalMoney() << endl;
+	}
+
+
+	//Problem 1 part C
+	cout << '\n' << "Problem 1 Part C" << endl;
+
+	//create the colection of purses 
+	vector<purse> purses = { Purse1, Purse2, Purse3, Purse4, Purse5, Purse6 };
+	
+	//diplay the total ammount each purse had before it is sorted 
+	cout << "Purse collection prior to the sort:" << endl;
+	for (int i = 0; i < purses.size(); i++) {
+		cout << "Purse " << (i + 1) << " has total money: $" << purses[i].totalMoney() << endl;
+	};
+	
+	//sort the total ammount of 
+	sort(purses.begin(), purses.end());
+
+	//diplay the total ammount each purse had before it is sorted 
+	cout << '\n' << "Purse collection after the sort:" << endl;
+	for (int i = 0; i < purses.size(); i++) {
+		cout << "Purse " << (i + 1) << " has total money: $" << purses[i].totalMoney() << endl;
+	};
+
 }
